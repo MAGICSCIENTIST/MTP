@@ -7,12 +7,20 @@ custom_imports = dict(imports=[
 ############################### default runtime #################################
 
 default_scope = 'mmseg'
+log_config = dict(
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='TensorboardLoggerHook')
+    ])
 env_cfg = dict(
     cudnn_benchmark=True,
     mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
     dist_cfg=dict(backend='nccl'),
 )
-vis_backends = [dict(type='LocalVisBackend')]
+# vis_backends = [dict(type='LocalVisBackend')]
+vis_backends = [dict(type='LocalVisBackend'),
+                dict(type='TensorboardVisBackend')]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')
 log_processor = dict(by_epoch=False)
@@ -22,12 +30,14 @@ resume = False
 
 ############################### dataset #################################
 
-dataset_type = 'LoveDADataset'
-data_root = 'E:\\data\\loveDa'
+dataset_type = 'YZTLineDataset'
+data_root = 'D:\\learn\\MyWork\\mylib\\outputSD\\temp_1024\\splitFile'
 crop_size = (512, 512)
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', reduce_zero_label=True),
+    # dict(type='LoadImageFromFile'),
+    dict(type='LoadSingleRSImageFromFile'),
+    # dict(type='LoadAnnotations', reduce_zero_label=False),
+    dict(type='LoadAnnotationsTIF', reduce_zero_label=False),
     dict(
         type='RandomResize',
         scale=(512, 512),
@@ -39,28 +49,33 @@ train_pipeline = [
     dict(type='PackSegInputs')
 ]
 val_pipeline = [
-    dict(type='LoadImageFromFile'),    
+    # dict(type='LoadImageFromFile'),
+    dict(type='LoadSingleRSImageFromFile'),
     dict(type='Resize', scale=crop_size, keep_ratio=False),
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
-    dict(type='LoadAnnotations', reduce_zero_label=True),
+    # dict(type='LoadAnnotations', reduce_zero_label=False),
+    dict(type='LoadAnnotationsTIF', reduce_zero_label=False),
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    # dict(type='LoadImageFromFile'),
+    dict(type='LoadSingleRSImageFromFile'),
+    # dict(type='LoadAnnotations', reduce_zero_label=False),
+     dict(type='LoadAnnotationsTIF', reduce_zero_label=False),
     dict(type='PackSegInputs')
-
 ]
+
 train_dataloader = dict(
-    batch_size=4,
-    num_workers=8,
+    batch_size=2,
+    num_workers=1,
     persistent_workers=True,
     sampler=dict(type='InfiniteSampler', shuffle=True),
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
         data_prefix=dict(
-            img_path='img_dir\\train', seg_map_path='ann_dir\\train'),
+            img_path='splitFile_raster\\train', seg_map_path='splitFile_raster_line\\train'),
         pipeline=train_pipeline))
 val_dataloader = dict(
     batch_size=1,
@@ -71,8 +86,10 @@ val_dataloader = dict(
         type=dataset_type,
         data_root=data_root,
         data_prefix=dict(
-            img_path='img_dir\\val', seg_map_path='ann_dir\\val'),
+            # img_path='splitFile_raster\\val', seg_map_path='splitFile_raster_line\\val'),
+            img_path='splitFile_raster\\test', seg_map_path='splitFile_raster_line\\test'),
         pipeline=val_pipeline))
+
 test_dataloader = dict(
     batch_size=1,
     num_workers=1,
@@ -81,10 +98,11 @@ test_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        data_prefix=dict(img_path='img_dir\\val', seg_map_path='ann_dir\\val'),
+        data_prefix=dict(img_path='splitFile_raster\\test', seg_map_path='splitFile_raster_line\\test'),
         pipeline=test_pipeline))
 
-val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU'], ignore_index=255)
+# val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU'], ignore_index=255)
+val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU'])
 # test_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU'], format_only=True)
 test_evaluator = val_evaluator
 
@@ -116,7 +134,7 @@ param_scheduler = [
 ]
 
 # training schedule for 80k
-train_cfg = dict(type='IterBasedTrainLoop', max_iters=80000, val_interval=20000)
+train_cfg = dict(type='IterBasedTrainLoop', max_iters=80000, val_interval=50)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 default_hooks = dict(
@@ -139,6 +157,7 @@ data_preprocessor = dict(
     bgr_to_rgb=True,
     pad_val=0,
     seg_pad_val=255)
+
 model = dict(
     type='EncoderDecoder',
     data_preprocessor=data_preprocessor,
@@ -164,16 +183,18 @@ model = dict(
     decode_head=dict(
         type='UPerHead',
         in_channels=[1024, 1024, 1024, 1024],
-        num_classes=7,
-        ignore_index=255,
+        num_classes=2,
+        ignore_index=0,
         in_index=[0, 1, 2, 3],
         pool_scales=(1, 2, 3, 6),
         channels=512,
         dropout_ratio=0.1,
         norm_cfg=norm_cfg,
         align_corners=False,
+        # loss_decode=dict(
+        #     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0, class_weight=[0.1, 1.0])
         loss_decode=dict(
-            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0, class_weight=[7.02288575,0.53832659], reduction='mean')
     ),
     train_cfg=dict(),
     test_cfg=dict(mode='slide', stride=(384,384), crop_size=(512, 512)))

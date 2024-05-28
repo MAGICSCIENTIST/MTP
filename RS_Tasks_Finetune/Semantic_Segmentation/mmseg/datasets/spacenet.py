@@ -2,7 +2,7 @@
 import mmengine.fileio as fileio
 
 from mmseg.registry import DATASETS
-from .basesegdataset import BaseSegDataset
+from mmseg.datasets.basesegdataset import BaseSegDataset
 
 
 @DATASETS.register_module()

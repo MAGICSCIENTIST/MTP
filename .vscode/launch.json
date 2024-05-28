@@ -1,0 +1,157 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "finetune_yzt_line.py",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line.py",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line",
+                "--launcher=none",
+                "--cfg-options",
+                "find_unused_parameters=True"
+            ],
+        },
+        {
+            "name": "finetune_yzt_origin.py",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-origin.py",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-origin",
+                "--launcher=none",
+                "--cfg-options",
+                "find_unused_parameters=True"
+            ],
+        },
+        {
+            "name": "finetune_yzt_dl2_penglai.py",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2-penglai.py",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2-penglai",
+                "--launcher=none",
+                "--cfg-options",
+                "find_unused_parameters=True"
+            ],
+        },
+        {
+            "name": "finetune_yzt_g_dl2_origin_merge_penglai.py",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-g-dl2-origin-merge-penglai.py",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-g-dl2-origin-merge-penglai",
+                "--launcher=none",
+                "--cfg-options",
+                "find_unused_parameters=True"
+            ],
+        },
+        {
+            "name": "finetune_yzt_0_dl2_origin_merge_penglai.py",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2-origin-merge-penglai.py",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2-origin-merge-penglai",
+                "--launcher=none",
+                "--cfg-options",
+                "find_unused_parameters=True"
+            ],
+        },
+        {
+            "name": "finetune_rvsa-l-upernet-512-mae-mtp-loveda.py",
+            "type": "python",
+            "request": "launch",
+            "program": "train.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/loveda/rvsa-l-upernet-512-mae-mtp-loveda.py",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/loveda/rvsa-l-upernet-512-mae-mtp-loveda",
+                "--launcher=none",
+                "--cfg-options",
+                "find_unused_parameters=True"
+            ],
+        },
+
+        {
+            "name": "test_finetune_yzt_line",
+            "type": "python",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line.py",
+                "output\\multitask_pretrain\\finetune\\Semantic_Segmentation\\yzt\\rvsa-l-upernet-512-mae-mtp-lyzt-line\\iter_20000.pth",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line",
+                "--out=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line/test/predict",
+                "--show-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line/test/show",
+                "--launcher=none",
+                // "--cfg-options",
+                // "val_dataloader=None",
+                // "val_evaluator=None"
+            ],
+        },
+        {
+            "name": "test_pretrain",
+            "type": "python",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line.py",
+                "pretrain\\last_vit_l_rvsa_ss_is_rd_pretrn_model_encoder.pth",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line",
+                "--out=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line/test-pretrain/predict",
+                "--show-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-line/test-pretrain/show",
+                "--launcher=none",
+                // "--cfg-options",
+                // "val_dataloader=None",
+                // "val_evaluator=None"
+            ],
+        },
+        {
+            "name": "test_finetune_yzt_dl2_merge_penglai",
+            "type": "python",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "RS_Tasks_Finetune/Semantic_Segmentation/configs/mtp/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2merge-penglai.py",
+                "output\\multitask_pretrain\\finetune\\Semantic_Segmentation\\yzt\\rvsa-l-upernet-512-mae-mtp-lyzt-dl2merge-penglai\\iter_60000.pth",
+                "--work-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2merge-penglai",
+                "--out=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2merge-penglai/test/6000",
+                "--show-dir=output/multitask_pretrain/finetune/Semantic_Segmentation/yzt/rvsa-l-upernet-512-mae-mtp-lyzt-dl2merge-penglai/test/6000/show",
+                "--launcher=none",
+                // "--cfg-options",
+                // "val_dataloader=None",
+                // "val_evaluator=None"
+            ],
+        },
+        
+    ]
+}

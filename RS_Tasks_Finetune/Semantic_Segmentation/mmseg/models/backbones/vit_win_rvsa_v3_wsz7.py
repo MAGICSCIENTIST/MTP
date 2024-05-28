@@ -1,3 +1,15 @@
+# --------------------------------------------------------
+# BEIT: BERT Pre-Training of Image Transformers (https://arxiv.org/abs/2106.08254)
+# Github source: https://github.com/microsoft/unilm/tree/master/beit
+# Copyright (c) 2021 Microsoft
+# Licensed under The MIT License [see LICENSE for details]
+# By Hangbo Bao
+# Based on timm, mmseg, setr, xcit and swin code bases
+# https://github.com/rwightman/pytorch-image-models/tree/master/timm
+# https://github.com/fudan-zvg/SETR
+# https://github.com/facebookresearch/xcit/
+# https://github.com/microsoft/Swin-Transformer
+# --------------------------------------------------------'
 import warnings
 import math
 import torch
@@ -10,14 +22,10 @@ from einops import rearrange, repeat
 from timm.models.layers import drop_path, to_2tuple, trunc_normal_
 
 from mmengine.dist import get_dist_info
-from .vit_win_rvsa_v3_wsz7 import ViT_Win_RVSA_V3_WSZ7
 
 # from mmcv_custom import load_checkpoint
 # from mmdet.utils import get_root_logger
 # from ..builder import BACKBONES
-
-
-from mmseg.registry import MODELS
 
 
 class DropPath(nn.Module):
@@ -576,8 +584,7 @@ class Norm2d(nn.Module):
         return x
 
 #@BACKBONES.register_module()
-@MODELS.register_module()
-class RVSA_MTP(nn.Module):
+class ViT_Win_RVSA_V3_WSZ7(nn.Module):
     """ Vision Transformer with support for patch or hybrid CNN input stage
     """
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=80, embed_dim=768, depth=12,
@@ -628,7 +635,7 @@ class RVSA_MTP(nn.Module):
         if self.pos_embed is not None:
             trunc_normal_(self.pos_embed, std=.02)
 
-        #self.norm = norm_layer(embed_dim)
+        self.norm = norm_layer(embed_dim)
 
         if patch_size == 16:
             self.fpn1 = nn.Sequential(
@@ -683,26 +690,17 @@ class RVSA_MTP(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
-    def init_weights(self):
+    def init_weights(self, pretrained):
         """Initialize the weights in backbone.
 
         Args:
             pretrained (str, optional): Path to pre-trained weights.
                 Defaults to None.
         """
-        pretrained = self.pretrained
-
-
-
-        # x = torch.randn(5, 5, device='cuda:0')
-        # y = torch.randn(5, 5, device='cuda:0')
-        # z = torch.mm(x, y) 
-        # z_cpu = z.to("cpu").numpy()
-        # print(z_cpu)
-
+        pretrained = pretrained or self.pretrained
         def _init_weights(m):
             if isinstance(m, nn.Linear):
-                #trunc_normal_(m.weight, std=.02)
+                trunc_normal_(m.weight, std=.02)
                 if isinstance(m, nn.Linear) and m.bias is not None:
                     nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.LayerNorm):
@@ -721,12 +719,6 @@ class RVSA_MTP(nn.Module):
             else:
                 state_dict = checkpoint
 
-            # print('$$$$$$$$$$$$$$$$$')
-            # print(state_dict.keys())
-
-            # print('#################')
-            # print(self.state_dict().keys())
-
             # strip prefix of state_dict
             if list(state_dict.keys())[0].startswith('module.'):
                 state_dict = {k[7:]: v for k, v in state_dict.items()}
@@ -735,58 +727,26 @@ class RVSA_MTP(nn.Module):
             if sorted(list(state_dict.keys()))[0].startswith('encoder'):
                 state_dict = {k.replace('encoder.', ''): v for k, v in state_dict.items() if k.startswith('encoder.')}
 
-            # # remove patch embed when inchan != 3
+            # remove patch embed when inchan != 3
 
-            # if self.in_chans != 3:
-            #     for k in list(state_dict.keys()):
-            #         if 'patch_embed.proj' in k:
-            #             del state_dict[k]
-
-
-            # rel pos of fill attn
-
-            full_attn_rel_pos_h = None
-            for name, param in self.named_parameters():
-                if 'attn.full_attn_rel_pos_h' in name:
-                    new_rel_sp_dim = param.shape[0]
-                    new_head_dim = param.shape[1]
-                    full_attn_rel_pos_h = True
-                    break
-
-            if full_attn_rel_pos_h:
-
+            if self.in_chans != 3:
                 for k in list(state_dict.keys()):
+                    if 'patch_embed.proj' in k:
+                        del state_dict[k]
 
-                    if 'full_attn_rel_pos_h' in k or 'full_attn_rel_pos_w' in k:
+            # print('$$$$$$$$$$$$$$$$$')
+            # print(state_dict.keys())
 
-                        old_rel_sp_dim = state_dict[k].shape[0]
-
-                        old_head_dim = state_dict[k].shape[1]
-
-                        old_rel_pos = state_dict[k]
-
-                        old_rel_pos = old_rel_pos.reshape(1, 1, old_rel_sp_dim, old_head_dim)
-
-                        new_rel_pos = torch.nn.functional.interpolate(
-                        old_rel_pos, size=(new_rel_sp_dim, new_head_dim), 
-                        mode='bicubic', align_corners=False)
-
-                        new_rel_pos = new_rel_pos.squeeze()
-
-                        state_dict[k] = new_rel_pos
+            # print('#################')
+            # print(self.state_dict().keys())
 
             rank, _ = get_dist_info()
             if 'pos_embed' in state_dict:
                 pos_embed_checkpoint = state_dict['pos_embed']
-
                 embedding_size = pos_embed_checkpoint.shape[-1]
                 H, W = self.patch_embed.patch_shape
                 num_patches = self.patch_embed.num_patches
-
-                if 'cls_token' in state_dict.keys():
-                    num_extra_tokens = 1
-                else:
-                    num_extra_tokens = 0
+                num_extra_tokens = 1
                 # height (== width) for the checkpoint position embedding
                 orig_size = int((pos_embed_checkpoint.shape[-2] - num_extra_tokens) ** 0.5)
                 # height (== width) for the new position embedding
@@ -850,7 +810,7 @@ class RVSA_MTP(nn.Module):
         for i in range(len(ops)):
             features[i] = ops[i](features[i])
 
-        return tuple(features)
+        return features
 
     def forward(self, x):
         x = self.forward_features(x)

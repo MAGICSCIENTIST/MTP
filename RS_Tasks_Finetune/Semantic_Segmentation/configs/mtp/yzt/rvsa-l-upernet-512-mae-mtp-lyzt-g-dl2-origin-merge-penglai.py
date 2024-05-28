@@ -12,7 +12,8 @@ env_cfg = dict(
     mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
     dist_cfg=dict(backend='nccl'),
 )
-vis_backends = [dict(type='LocalVisBackend')]
+vis_backends = [dict(type='LocalVisBackend'),
+                dict(type='TensorboardVisBackend')]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')
 log_processor = dict(by_epoch=False)
@@ -22,12 +23,12 @@ resume = False
 
 ############################### dataset #################################
 
-dataset_type = 'LoveDADataset'
-data_root = 'E:\\data\\loveDa'
-crop_size = (512, 512)
+dataset_type = 'YZTOriginDataset'
+data_root = 'D:\\learn\\MyWork\\mylib\\output\\temp\\splitFile_raster_merge_g_dl2_origin_256'
+crop_size = (256, 256)
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', reduce_zero_label=True),
+    dict(type='LoadSingleRSImageFromFile'),
+    dict(type='LoadAnnotationsTIF', reduce_zero_label=True),
     dict(
         type='RandomResize',
         scale=(512, 512),
@@ -39,28 +40,29 @@ train_pipeline = [
     dict(type='PackSegInputs')
 ]
 val_pipeline = [
-    dict(type='LoadImageFromFile'),    
+    dict(type='LoadSingleRSImageFromFile'),    
     dict(type='Resize', scale=crop_size, keep_ratio=False),
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
-    dict(type='LoadAnnotations', reduce_zero_label=True),
+    dict(type='LoadAnnotationsTIF', reduce_zero_label=True),
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadSingleRSImageFromFile'),
+    dict(type='LoadAnnotationsTIF', reduce_zero_label=True ),
     dict(type='PackSegInputs')
 
 ]
 train_dataloader = dict(
-    batch_size=4,
-    num_workers=8,
+    batch_size=2,
+    num_workers=1,
     persistent_workers=True,
     sampler=dict(type='InfiniteSampler', shuffle=True),
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
         data_prefix=dict(
-            img_path='img_dir\\train', seg_map_path='ann_dir\\train'),
+            img_path='splitFile_raster\\train', seg_map_path='splitFile_current\\train'),
         pipeline=train_pipeline))
 val_dataloader = dict(
     batch_size=1,
@@ -71,7 +73,7 @@ val_dataloader = dict(
         type=dataset_type,
         data_root=data_root,
         data_prefix=dict(
-            img_path='img_dir\\val', seg_map_path='ann_dir\\val'),
+            img_path='splitFile_raster\\val', seg_map_path='splitFile_current\\val'),
         pipeline=val_pipeline))
 test_dataloader = dict(
     batch_size=1,
@@ -81,7 +83,7 @@ test_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        data_prefix=dict(img_path='img_dir\\val', seg_map_path='ann_dir\\val'),
+        data_prefix=dict(img_path='splitFile_raster\\val', seg_map_path='splitFile_current\\val'),
         pipeline=test_pipeline))
 
 val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU'], ignore_index=255)
@@ -104,7 +106,8 @@ optim_wrapper = dict(
 
 param_scheduler = [
     dict(
-        type='LinearLR', start_factor=1e-6, by_epoch=False, begin=0, end=1500),
+        #1e-6
+        type='LinearLR', start_factor=5e-6, by_epoch=False, begin=0, end=1500),
     dict(
         type='CosineAnnealingLR',
         eta_min=0.0,
@@ -116,7 +119,7 @@ param_scheduler = [
 ]
 
 # training schedule for 80k
-train_cfg = dict(type='IterBasedTrainLoop', max_iters=80000, val_interval=20000)
+train_cfg = dict(type='IterBasedTrainLoop', max_iters=80000, val_interval=5000)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 default_hooks = dict(
@@ -144,7 +147,7 @@ model = dict(
     data_preprocessor=data_preprocessor,
     backbone=dict(
         type='RVSA_MTP',
-        img_size=512,
+        img_size=256,
         patch_size=16,
         drop_path_rate=0.3,
         out_indices=[7, 11, 15, 23],
@@ -173,7 +176,7 @@ model = dict(
         norm_cfg=norm_cfg,
         align_corners=False,
         loss_decode=dict(
-            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0, class_weight= [0.4713643  ,0.17672684 ,1.66769399,0 ,1.52009316, 0.42749887, 1.60416765 ])
     ),
     train_cfg=dict(),
-    test_cfg=dict(mode='slide', stride=(384,384), crop_size=(512, 512)))
+    test_cfg=dict(mode='slide', stride=(128,128), crop_size=(256, 256)))
