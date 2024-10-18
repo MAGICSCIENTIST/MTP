@@ -11,35 +11,37 @@ from mmcv.transforms import LoadAnnotations as MMCV_LoadAnnotations
 from mmseg.registry import TRANSFORMS
 from mmseg.registry import VISUALIZERS
 from mmseg.utils import datafrombytes
+from mmengine.visualization import Visualizer
 
 
 
-# @VISUALIZERS.register_module()
-# class SegLocalVisualizer(BaseVisualizer):
-#     """Visualizer to visualize segmentation results.
 
-#     Args:
-#         vis_backends (list[dict]): List of visualization backends.
-#         name (str, optional): Name of the visualizer. Defaults to 'visualizer'.
-#     """
+@VISUALIZERS.register_module()
+class SegLocalVisualizer(Visualizer):
+    """Visualizer to visualize segmentation results.
 
-#     def __init__(self, vis_backends, name='visualizer'):
-#         super().__init__(name)
-#         self.vis_backends = [build_visualizer(backend) for backend in vis_backends]
+    Args:
+        vis_backends (list[dict]): List of visualization backends.
+        name (str, optional): Name of the visualizer. Defaults to 'visualizer'.
+    """
 
-#     def visualize(self, result, meta=None, **kwargs):
-#         """Visualize the results.
+    def __init__(self, vis_backends, name='visualizer'):
+        super().__init__(name)
+        self.vis_backends = [build_visualizer(backend) for backend in vis_backends]
 
-#         Args:
-#             result (dict): The result dict contains the data to visualize.
-#             meta (dict): Meta information of the data.
-#         """
-#         for backend in self.vis_backends:
-#             backend.visualize(result, meta, **kwargs)
+    def visualize(self, result, meta=None, **kwargs):
+        """Visualize the results.
 
-#     def __repr__(self):
-#         return (f'{self.__class__.__name__}('
-#                 f'vis_backends={self.vis_backends}, name={self.name})')
+        Args:
+            result (dict): The result dict contains the data to visualize.
+            meta (dict): Meta information of the data.
+        """
+        for backend in self.vis_backends:
+            backend.visualize(result, meta, **kwargs)
+
+    def __repr__(self):
+        return (f'{self.__class__.__name__}('
+                f'vis_backends={self.vis_backends}, name={self.name})')
     
 
 @TRANSFORMS.register_module() 
